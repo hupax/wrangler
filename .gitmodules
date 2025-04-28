@@ -1,0 +1,3 @@
+[submodule "next-st"]
+	path = next-st
+	url = https://github.com/hupax/next-st
