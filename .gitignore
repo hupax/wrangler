@@ -42,4 +42,10 @@ next-env.d.ts
 
 .cursorrules
 
-next-st/*
+*/node_modules
+*/.next
+*/.env
+
+next-st/node_modules
+next-st/.next
+next-st/.env
