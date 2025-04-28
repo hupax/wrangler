@@ -1,0 +1,235 @@
+ <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动态表格 CRUD 示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .delete-btn {
+            background-color: #f44336;
+        }
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        .edit-btn {
+            background-color: #2196F3;
+        }
+        .edit-btn:hover {
+            background-color: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+    <h1>动态表格 CRUD 示例</h1>
+
+    <div id="user-form">
+        <h2>添加/编辑用户</h2>
+        <input type="hidden" id="edit-id">
+        <div class="form-group">
+            <label for="name">姓名:</label>
+            <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+            <label for="email">邮箱:</label>
+            <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+            <label for="phone">电话:</label>
+            <input type="text" id="phone" required>
+        </div>
+        <button id="submit-btn">添加用户</button>
+        <button id="cancel-btn" style="display:none;">取消</button>
+    </div>
+
+    <h2>用户列表</h2>
+    <table id="user-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>姓名</th>
+                <th>邮箱</th>
+                <th>电话</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="user-list">
+            <!-- 数据将通过 JavaScript 动态添加 -->
+        </tbody>
+    </table>
+
+    <script>
+        // 用户数据数组
+        let users = [
+            { id: 1, name: '张三', email: 'zhangsan@example.com', phone: '13800000000' },
+            { id: 2, name: '李四', email: 'lisi@example.com', phone: '13900000000' },
+            { id: 3, name: '王五', email: 'wangwu@example.com', phone: '13700000000' }
+        ];
+
+        // DOM 元素
+        const userList = document.getElementById('user-list');
+        const userForm = document.getElementById('user-form');
+        const editIdInput = document.getElementById('edit-id');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const phoneInput = document.getElementById('phone');
+        const submitBtn = document.getElementById('submit-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+
+        // 显示所有用户
+        function displayUsers() {
+            userList.innerHTML = '';
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.phone}</td>
+                    <td>
+                        <button class="edit-btn" data-id="${user.id}">编辑</button>
+                        <button class="delete-btn" data-id="${user.id}">删除</button>
+                    </td>
+                `;
+                userList.appendChild(row);
+            });
+
+            // 添加编辑按钮事件监听
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', editUser);
+            });
+
+            // 添加删除按钮事件监听
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', deleteUser);
+            });
+        }
+
+        // 添加/更新用户
+        function handleSubmit(e) {
+            e.preventDefault();
+
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+            const phone = phoneInput.value.trim();
+
+            if (!name || !email || !phone) {
+                alert('请填写所有字段');
+                return;
+            }
+
+            const id = editIdInput.value;
+
+            if (id) {
+                // 更新用户
+                const index = users.findIndex(user => user.id == id);
+                if (index !== -1) {
+                    users[index] = { ...users[index], name, email, phone };
+                    resetForm();
+                }
+            } else {
+                // 添加新用户
+                const newId = users.length > 0 ? Math.max(...users.map(user => user.id)) + 1 : 1;
+                users.push({ id: newId, name, email, phone });
+                resetForm();
+            }
+
+            displayUsers();
+        }
+
+        // 编辑用户
+        function editUser(e) {
+            const id = e.target.getAttribute('data-id');
+            const user = users.find(user => user.id == id);
+
+            if (user) {
+                editIdInput.value = user.id;
+                nameInput.value = user.name;
+                emailInput.value = user.email;
+                phoneInput.value = user.phone;
+
+                submitBtn.textContent = '更新用户';
+                cancelBtn.style.display = 'inline-block';
+
+                // 滚动到表单位置
+                userForm.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // 删除用户
+        function deleteUser(e) {
+            if (confirm('确定要删除这个用户吗？')) {
+                const id = e.target.getAttribute('data-id');
+                users = users.filter(user => user.id != id);
+                displayUsers();
+            }
+        }
+
+        // 重置表单
+        function resetForm() {
+            editIdInput.value = '';
+            nameInput.value = '';
+            emailInput.value = '';
+            phoneInput.value = '';
+            submitBtn.textContent = '添加用户';
+            cancelBtn.style.display = 'none';
+        }
+
+        // 取消编辑
+        function cancelEdit() {
+            resetForm();
+        }
+
+        // 初始化事件监听
+        submitBtn.addEventListener('click', handleSubmit);
+        cancelBtn.addEventListener('click', cancelEdit);
+
+        // 初始显示用户
+        displayUsers();
+    </script>
+</body>
+</html>
